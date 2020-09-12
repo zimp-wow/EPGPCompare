@@ -6,7 +6,7 @@ namespace EPGPCompare
 {
 	class Program
 	{
-		const bool DEBUG_LOGS = true;
+		const bool DEBUG_LOGS = false;
 
 		static void Main(string[] args)
 		{
@@ -89,18 +89,6 @@ namespace EPGPCompare
 			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
 			Console.WriteLine();
 
-			Console.Write( "Competitor: " );
-			string competitor = Console.ReadLine().Trim();
-
-			Standings.Entry otherEntry = standings.Entries.Find( ( entry ) => entry.Name.ToLower() == competitor.ToLower() );
-			if( otherEntry == null ) {
-				Console.WriteLine( "Couldnt find player" );
-				return;
-			}
-			
-			Console.WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-			Console.WriteLine();
-
 			Console.Write( "Points you want to spend: " );
 			int points = 0;
 			if( !int.TryParse( Console.ReadLine(), out points ) ) {
@@ -112,6 +100,44 @@ namespace EPGPCompare
 			yourEntry.PR = double.Parse( $"{((double)yourEntry.EP / yourEntry.GP):F2}" );
 
 			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			Console.WriteLine();
+
+			Console.Write( "Competitor: " );
+			string competitor = Console.ReadLine().Trim();
+
+			if( competitor == "*" ) {
+				AnalyzeAll( yourEntry, standings );
+				return;
+			}
+
+			Standings.Entry otherEntry = standings.Entries.Find( ( entry ) => entry.Name.ToLower() == competitor.ToLower() );
+			if( otherEntry == null ) {
+				Console.WriteLine( "Couldnt find player" );
+				return;
+			}
+
+			AnalyzeSingle( yourEntry, otherEntry );
+		}
+
+		private static void AnalyzeAll( Standings.Entry yourEntry, Standings standings ) {
+			foreach( Standings.Entry entry in standings.Entries ) {
+				Standings.Entry yourClone = new Standings.Entry();
+
+				yourClone.Name = yourEntry.Name;
+				yourClone.EP = yourEntry.EP;
+				yourClone.GP = yourEntry.GP;
+				yourClone.PR = yourEntry.PR;
+
+				AnalyzeSingle( yourClone, entry );
+			}
+		}
+
+		private static void AnalyzeSingle( Standings.Entry yourEntry, Standings.Entry otherEntry ) {
+			Console.WriteLine();
+			Console.WriteLine( "-----------------------------------------------" );
+			
+			Console.WriteLine();
+			Console.WriteLine( $"Competitor: { otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
 			Console.WriteLine();
 
 			if( yourEntry.PR <= otherEntry.PR ) {
@@ -166,6 +192,7 @@ namespace EPGPCompare
 			Console.WriteLine();
 			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
 			Console.WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+			Console.WriteLine();
 		}
 	}
 }

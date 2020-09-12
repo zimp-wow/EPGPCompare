@@ -43,6 +43,9 @@ namespace EPGPAnalyze
 			public int      GP      { get; set; }
 			public double   PR      { get; set; }
 
+			public Entry() {
+			}
+
 			public Entry( string line ) {
 
 				string[] comps = line.Split( ',' );
