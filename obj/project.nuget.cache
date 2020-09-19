@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "86CJxa8PKvR26NsQ+Nz6/JhqDDW0il2ZPYgnMAuyoAnVj+clCJmMfaUGA0sg7D5PC/H547SnIl4Iu3a4xxjLAQ==",
+  "dgSpecHash": "PGGFNswBgfJ0YNVjZLdzhhvAEBd2KvA3Ig22xjOZSFaZk+189w8+S8qPSZ2VsSMNz7zgn1pNpqDk5/N2jpqoEg==",
   "success": true,
   "projectFilePath": "C:\\Users\\Timothy Parker\\source\\repos\\EPGPCompare\\EPGPCompare.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Timothy Parker\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\3.1.2\\microsoft.aspnetcore.app.ref.3.1.2.nupkg.sha512"
+  ],
   "logs": []
 }

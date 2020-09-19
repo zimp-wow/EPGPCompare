@@ -1,12 +1,15 @@
 ﻿using EPGPAnalyze;
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace EPGPCompare
 {
 	class Program
 	{
 		const bool DEBUG_LOGS = false;
+
+		private static StreamWriter Log = null;
 
 		static void Main(string[] args)
 		{
@@ -16,16 +19,28 @@ namespace EPGPCompare
 			Console.WriteLine();
 			Console.Write( "? " );
 
-			if( int.TryParse( Console.ReadLine(), out int choice ) ) {
-				switch( choice ) {
-					case 1:
-						OverallStandings();
-						break;
-					case 2:
-						Analyze();
-						break;
+			using( Log = new StreamWriter( new FileStream( "log.txt", FileMode.Create ) ) ) {
+				if( int.TryParse( Console.ReadLine(), out int choice ) ) {
+					switch( choice ) {
+						case 1:
+							OverallStandings();
+							break;
+						case 2:
+							Analyze();
+							break;
+					}
 				}
 			}
+
+			Log = null;
+		}
+
+		static void WriteLine( string line = "" ) {
+			if( Log != null ) {
+				Log.WriteLine( line );
+			}
+
+			Console.WriteLine( line );
 		}
 
 		static void OverallStandings()
@@ -43,8 +58,8 @@ namespace EPGPCompare
 				return;
 			}
 
-			Console.WriteLine( $"You: { yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-			Console.WriteLine();
+			WriteLine( $"You: { yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			WriteLine();
 
 			foreach( Standings.Entry otherEntry in standings.Entries ) {
 				if( otherEntry.Name == yourEntry.Name ) {
@@ -56,19 +71,19 @@ namespace EPGPCompare
 				}
 
 				if( otherEntry.PR > yourEntry.PR ) {
-					Console.WriteLine( "You lose to '" + otherEntry.Name + "' because your PR is lower" );
+					WriteLine( "You lose to '" + otherEntry.Name + "' because your PR is lower" );
 					continue;
 				}
 
 				if( otherEntry.PR == yourEntry.PR ) {
-					Console.WriteLine( "You tie with '" + otherEntry.Name + "' because your PR is the same" );
+					WriteLine( "You tie with '" + otherEntry.Name + "' because your PR is the same" );
 					continue;
 				}
 
 				double PRDiff = yourEntry.PR - otherEntry.PR;
 				double allowance = yourEntry.EP / otherEntry.PR - yourEntry.GP;
 
-				Console.WriteLine( $"If you spend {allowance:F2} GP you're PR will match { otherEntry.Name }'s ({ otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR })" );
+				WriteLine( $"If you spend {allowance:F2} GP you're PR will match { otherEntry.Name }'s ({ otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR })" );
 			}
 		}
 
@@ -86,8 +101,8 @@ namespace EPGPCompare
 				return;
 			}
 
-			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-			Console.WriteLine();
+			WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			WriteLine();
 
 			Console.Write( "Points you want to spend: " );
 			int points = 0;
@@ -99,8 +114,8 @@ namespace EPGPCompare
 			yourEntry.GP += points;
 			yourEntry.PR = double.Parse( $"{((double)yourEntry.EP / yourEntry.GP):F2}" );
 
-			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-			Console.WriteLine();
+			WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			WriteLine();
 
 			Console.Write( "Competitor: " );
 			string competitor = Console.ReadLine().Trim();
@@ -133,15 +148,15 @@ namespace EPGPCompare
 		}
 
 		private static void AnalyzeSingle( Standings.Entry yourEntry, Standings.Entry otherEntry ) {
-			Console.WriteLine();
-			Console.WriteLine( "-----------------------------------------------" );
+			WriteLine();
+			WriteLine( "-----------------------------------------------" );
 			
-			Console.WriteLine();
-			Console.WriteLine( $"Competitor: { otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-			Console.WriteLine();
+			WriteLine();
+			WriteLine( $"Competitor: { otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+			WriteLine();
 
 			if( yourEntry.PR <= otherEntry.PR ) {
-				Console.WriteLine( "You immediately lose priority to your competitor after this award" );
+				WriteLine( "You immediately lose priority to your competitor after this award" );
 				return;
 			}
 
@@ -171,10 +186,10 @@ namespace EPGPCompare
 				otherEntry.PR = double.Parse( $"{((double)otherEntry.EP / otherEntry.GP):F2}" );
 
 				if( DEBUG_LOGS ) {
-					Console.WriteLine( "Iteration: " + iterations );
-					Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-					Console.WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-					Console.WriteLine();
+					WriteLine( "Iteration: " + iterations );
+					WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+					WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+					WriteLine();
 				}
 
 				if( otherEntry.PR >= yourEntry.PR ) {
@@ -186,13 +201,13 @@ namespace EPGPCompare
 				}
 			}
 
-			Console.WriteLine( $"It took { iterations } weeks for { otherEntry.Name } to catch you in PR after you spent GP." );
-			Console.WriteLine( "Assuming you both had identical raid attendance" );
+			WriteLine( $"It took { iterations } weeks for { otherEntry.Name } to catch you in PR after you spent GP." );
+			WriteLine( "Assuming you both had identical raid attendance" );
 
-			Console.WriteLine();
-			Console.WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-			Console.WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-			Console.WriteLine();
+			WriteLine();
+			WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+			WriteLine();
 		}
 	}
 }
