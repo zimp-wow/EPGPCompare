@@ -2,6 +2,10 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using BasicHttpServerCore;
+using System.Threading.Tasks;
+using System.Text;
+using System.Collections.Generic;
 
 namespace EPGPCompare
 {
@@ -16,6 +20,7 @@ namespace EPGPCompare
 			Console.WriteLine( "Choose Mode: " );
 			Console.WriteLine( "    1. Overall" );
 			Console.WriteLine( "    2. Simulate" );
+			Console.WriteLine( "    3. Web" );
 			Console.WriteLine();
 			Console.Write( "? " );
 
@@ -27,6 +32,9 @@ namespace EPGPCompare
 							break;
 						case 2:
 							Analyze();
+							break;
+						case 3:
+							Web();
 							break;
 					}
 				}
@@ -120,8 +128,17 @@ namespace EPGPCompare
 			Console.Write( "Competitor: " );
 			string competitor = Console.ReadLine().Trim();
 
+			WriteLine();
+
+			Console.Write( "Weekly EP Award: " );
+			int weeklyEP = 300;
+			if( !int.TryParse( Console.ReadLine(), out weeklyEP ) ) {
+				Console.WriteLine( "Invalid weekly EP" );
+				return;
+			}
+
 			if( competitor == "*" ) {
-				AnalyzeAll( yourEntry, standings );
+				AnalyzeAll( yourEntry, standings, weeklyEP );
 				return;
 			}
 
@@ -131,10 +148,12 @@ namespace EPGPCompare
 				return;
 			}
 
-			AnalyzeSingle( yourEntry, otherEntry );
+			WriteLine( AnalyzeSingle( yourEntry, otherEntry, weeklyEP ).Logs.ToString() );
 		}
 
-		private static void AnalyzeAll( Standings.Entry yourEntry, Standings standings ) {
+		private static void AnalyzeAll( Standings.Entry yourEntry, Standings standings, int weeklyEP ) {
+			List<SimulationResult> results = new List<SimulationResult>();
+
 			foreach( Standings.Entry entry in standings.Entries ) {
 				Standings.Entry yourClone = new Standings.Entry();
 
@@ -143,21 +162,36 @@ namespace EPGPCompare
 				yourClone.GP = yourEntry.GP;
 				yourClone.PR = yourEntry.PR;
 
-				AnalyzeSingle( yourClone, entry );
+				results.Add( AnalyzeSingle( yourClone, entry, weeklyEP ) );
+			}
+
+			results.Sort( ( SimulationResult left, SimulationResult right ) => left.Weeks.CompareTo( right.Weeks ) );
+
+			foreach( SimulationResult result in results ) {
+				WriteLine( result.Logs.ToString() );
 			}
 		}
 
-		private static void AnalyzeSingle( Standings.Entry yourEntry, Standings.Entry otherEntry ) {
-			WriteLine();
-			WriteLine( "-----------------------------------------------" );
+		private static SimulationResult AnalyzeSingle( Standings.Entry yourEntry, Standings.Entry otherEntry, int weeklyEP ) {
+			StringBuilder sb = new StringBuilder();
+
+			void writeLine( string line = "" ) {
+				sb.AppendLine( line );
+			}
+
+			writeLine();
+			writeLine( "-----------------------------------------------" );
 			
-			WriteLine();
-			WriteLine( $"Competitor: { otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-			WriteLine();
+			writeLine();
+			writeLine( $"Competitor: { otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+			writeLine();
 
 			if( yourEntry.PR <= otherEntry.PR ) {
-				WriteLine( "You immediately lose priority to your competitor after this award" );
-				return;
+				writeLine( "You immediately lose priority to your competitor after this award" );
+				return new SimulationResult() {
+					Weeks = 0,
+					Logs = sb
+				};
 			}
 
 			int decay( int val, double percent, int baseVal = 0 ) {
@@ -170,8 +204,7 @@ namespace EPGPCompare
 
 			int iterations = 0;
 			int baseGP = 150;
-			int weeklyEP = 300;
-			while( true ) {
+			while( iterations < 100 ) {
 				iterations++;
 
 				yourEntry.EP += weeklyEP;
@@ -186,10 +219,10 @@ namespace EPGPCompare
 				otherEntry.PR = double.Parse( $"{((double)otherEntry.EP / otherEntry.GP):F2}" );
 
 				if( DEBUG_LOGS ) {
-					WriteLine( "Iteration: " + iterations );
-					WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-					WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-					WriteLine();
+					writeLine( "Iteration: " + iterations );
+					writeLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+					writeLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+					writeLine();
 				}
 
 				if( otherEntry.PR >= yourEntry.PR ) {
@@ -201,13 +234,39 @@ namespace EPGPCompare
 				}
 			}
 
-			WriteLine( $"It took { iterations } weeks for { otherEntry.Name } to catch you in PR after you spent GP." );
-			WriteLine( "Assuming you both had identical raid attendance" );
+			writeLine( $"It took { iterations } weeks for { otherEntry.Name } to catch you in PR after you spent GP." );
+			writeLine( "Assuming you both had identical raid attendance" );
 
-			WriteLine();
-			WriteLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
-			WriteLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
-			WriteLine();
+			writeLine();
+			writeLine( $"{ yourEntry.Name } -- { yourEntry.EP }/{ yourEntry.GP } -- { yourEntry.PR }" );
+			writeLine( $"{ otherEntry.Name } -- { otherEntry.EP }/{ otherEntry.GP } -- { otherEntry.PR }" );
+			writeLine();
+
+			return new SimulationResult() {
+				Weeks = iterations,
+				Logs = sb
+			};
+		}
+
+		private static void Web() {
+			string prefix = "http://localhost:57985";
+			BasicHttpServer server = new BasicHttpServer( prefix );
+
+			#if DEBUG
+			server.HandleFiles( @"..\..\..\Web" );
+			#else
+			server.HandleFiles( "Web" );
+			#endif
+
+			Task task = server.Start();
+			Console.WriteLine( "Server listening on: " + prefix );
+
+			task.Wait();
+		}
+
+		private class SimulationResult {
+			public int           Weeks { get; set; } = 0;
+			public StringBuilder Logs  { get; set; }
 		}
 	}
 }

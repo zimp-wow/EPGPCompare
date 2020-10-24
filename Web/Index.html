@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+	<meta charset="utf-8" />
+	<title></title>
+</head>
+<body>
+	<div class="container" style="padding-top: 20px">
+		<div class="row" id="rowStandings">
+			<div class="input-field col s11">
+				<textarea id="areaStandings" class="materialize-textarea"></textarea>
+				<label for="areaStandings">Paste exported standings here</label>
+			</div>
+			<a id="btnImport" class="btn-floating btn-large waves-effect waves-light green disabled"><i class="material-icons">check</i></a>
+		</div>
+		<div class="row hide" id="rowCharacter">
+			<div class="input-field col s11">
+				<input type="text" id="playerName" class="autocomplete" />
+				<label for="playerName">Player name</label>
+			</div>
+			<a id="btnSelectChar" class="btn-floating btn-large waves-effect waves-light green disabled"><i class="material-icons">check</i></a>
+		</div>
+		<div class="row hide" id="rowMain">
+			<div class="col s12">
+				<ul class="tabs" id="tabsMain">
+					<li class="tab col s3"><a href="#gpDiff" class="active">GP Difference</a></li>
+					<li class="tab col s3"><a href="#simulate">Simulate</a></li>
+				</ul>
+			</div>
+			<div id="gpDiff" class="col s12">
+				gp diff
+			</div>
+			<div id="simulate" class="col s12">
+				simulate
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" src="js/materialize.min.js"></script>
+	<script type="text/javascript" src="js/index.js"></script>
+</body>
+</html>
